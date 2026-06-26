@@ -1,0 +1,53 @@
+# Git and version control
+.git
+.gitignore
+.gitattributes
+
+# Build directories (already in builder image)
+build/
+bin/
+.gradle/
+.m2/
+target/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.iml
+*.classpath
+*.project
+*.settings
+.DS_Store
+
+# Node.js (if used)
+node_modules/
+npm-debug.log
+
+# Documentation
+*.md
+docs/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+Jenkinsfile
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Docker files (don't need to copy into build)
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Environment files
+.env
+.env.local
+
+# Test reports
+test-results/
+coverage/
