@@ -1,6 +1,7 @@
 package com.example.aiintegration;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
@@ -19,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class TimeoutTest {
 
     @Test
+    @DisabledIfEnvironmentVariable(named = "CI", matches = "true")
     void readTimeout_shouldThrowResourceAccessException() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(2000);

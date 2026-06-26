@@ -2,39 +2,79 @@ name: Java CI with Gradle
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [main, develop]
   pull_request:
-    branches: [ "main" ]
+    branches: [main]
+
+# Grant necessary permissions for test result publishing
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
 
 jobs:
-  build:
+  build-and-test:
+    name: Build and Test
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: read
-
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
+          java-version: "21"
+          distribution: "temurin"
+          cache: gradle
 
-      - name: Show Java version
-        run: |
-          java -version
-          ./gradlew --version
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Make gradlew executable
+      - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build with Gradle Wrapper
-        run: ./gradlew build --stacktrace
+      - name: Build with Gradle
+        run: ./gradlew clean build -x dependencyCheckAnalyze --info
+
+      - name: Run Unit Tests
+        run: ./gradlew test -x dependencyCheckAnalyze --info
+        env:
+          CI: "true"
+
+      # NOTE: OWASP Dependency-Check is disabled in CI due to NVD API network limitations
+      # To run security scans locally: ./gradlew dependencyCheckAnalyze
+      # Requires NVD API key for reliable results (see build.gradle)
+
+      - name: Upload Test Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: build/reports/tests/test/
+
+      - name: Publish Test Results
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: build/test-results/test/TEST-*.xml
+          check_name: Unit Test Results
+        continue-on-error: true
+
+  docker-build:
+    name: Docker Build Verification
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: my-spring-app:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
