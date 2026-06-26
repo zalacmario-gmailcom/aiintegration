@@ -30,6 +30,8 @@ jobs:
 
       - name: Run Unit Tests
         run: ./gradlew test -x dependencyCheckAnalyze --info
+        env:
+          CI: "true"
 
       # NOTE: OWASP Dependency-Check is disabled in CI due to NVD API network limitations
       # To run security scans locally: ./gradlew dependencyCheckAnalyze
